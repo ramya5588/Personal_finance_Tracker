@@ -61,21 +61,6 @@ This project combines **Spring Boot REST APIs**, **React frontend development**,
 
 ---
 
-## 🖼️ Screenshots
-
-> Replace these image paths with your actual screenshots after adding them to the repository.
-
-### Dashboard Overview
-![Dashboard](./screenshots/dashboard-overview.png)
-
-### Charts and Insights
-![Charts and Insights](./screenshots/charts-insights.png)
-
-### Transactions Table
-![Transactions Table](./screenshots/transactions-table.png)
-
----
-
 ## 🎬 Demo
 
 > Add a GIF or screen recording later for a stronger GitHub presentation.

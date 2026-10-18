@@ -10,12 +10,16 @@ import com.finance.backend.entity.Transaction;
 import com.finance.backend.entity.TransactionType;
 import com.finance.backend.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +49,13 @@ public class TransactionService {
                 .stream()
                 .map(this::mapToResponseDto)
                 .toList();
+    }
+
+    public void deleteTransaction(Long id) {
+        if (!transactionRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found");
+        }
+        transactionRepository.deleteById(id);
     }
 
     public DashboardSummaryDto getDashboardSummary() {
@@ -101,7 +112,11 @@ public class TransactionService {
             }
         }
 
-        return incomeMap.keySet().stream()
+        Set<String> months = new TreeSet<>();
+        months.addAll(incomeMap.keySet());
+        months.addAll(expenseMap.keySet());
+
+        return months.stream()
                 .map(month -> new MonthlyTrendDto(
                         month,
                         incomeMap.getOrDefault(month, BigDecimal.ZERO),

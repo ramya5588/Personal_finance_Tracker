@@ -1,6 +1,14 @@
 HELP.md
 .gradle
+.gradle-cache/
 build/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.env
+.env.*
+!.env.example
+*.log
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/

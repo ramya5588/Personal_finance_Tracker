@@ -1,4 +1,20 @@
-function TransactionList({ transactions }) {
+import { deleteTransaction } from "../api/transactionApi";
+
+function TransactionList({ transactions, onTransactionDeleted }) {
+    const handleDelete = async (id) => {
+        if (!window.confirm("Delete this transaction?")) {
+            return;
+        }
+
+        try {
+            await deleteTransaction(id);
+            await onTransactionDeleted?.();
+        } catch (error) {
+            console.error("Error deleting transaction:", error);
+            alert("Failed to delete transaction");
+        }
+    };
+
     return (
         <div className="card">
             <h2 className="section-title">All Transactions</h2>
@@ -14,6 +30,7 @@ function TransactionList({ transactions }) {
                         <th>Description</th>
                         <th>Date</th>
                         <th>Source</th>
+                        <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -27,11 +44,20 @@ function TransactionList({ transactions }) {
                                 <td>{transaction.description}</td>
                                 <td>{transaction.transactionDate}</td>
                                 <td>{transaction.source}</td>
+                                <td>
+                                    <button
+                                        className="delete-button"
+                                        type="button"
+                                        onClick={() => handleDelete(transaction.id)}
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
                             </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="7">No transactions found</td>
+                            <td colSpan="8">No transactions found</td>
                         </tr>
                     )}
                     </tbody>

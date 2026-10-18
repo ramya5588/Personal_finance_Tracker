@@ -29,10 +29,13 @@ public class CsvService {
                 BufferedReader fileReader = new BufferedReader(
                         new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)
                 );
-                CSVParser csvParser = new CSVParser(
-                        fileReader,
-                        CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim()
-                )
+                CSVParser csvParser = CSVFormat.DEFAULT.builder()
+                        .setHeader()
+                        .setSkipHeaderRecord(true)
+                        .setIgnoreHeaderCase(true)
+                        .setTrim(true)
+                        .build()
+                        .parse(fileReader)
         ) {
             for (CSVRecord csvRecord : csvParser) {
                 Transaction transaction = new Transaction();

@@ -5,6 +5,7 @@ import com.finance.backend.dto.TransactionResponseDto;
 import com.finance.backend.service.CsvService;
 import com.finance.backend.service.TransactionService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origin}")
 public class TransactionController {
 
     private final TransactionService transactionService;
@@ -31,6 +32,12 @@ public class TransactionController {
     @GetMapping
     public List<TransactionResponseDto> getAllTransactions() {
         return transactionService.getAllTransactions();
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTransaction(@PathVariable Long id) {
+        transactionService.deleteTransaction(id);
     }
 
     @PostMapping("/upload")

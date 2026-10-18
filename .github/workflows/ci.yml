@@ -67,3 +67,16 @@ jobs:
 
       - name: Audit production dependencies
         run: npm audit --omit=dev
+
+  containers:
+    name: Container builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [backend, frontend]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Build application images
+        run: docker compose build

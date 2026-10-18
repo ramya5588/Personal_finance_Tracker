@@ -40,7 +40,7 @@ class TransactionRepositoryIntegrationTest {
                 Integer.class
         );
 
-        assertTrue(appliedMigrations != null && appliedMigrations >= 1);
+        assertTrue(appliedMigrations != null && appliedMigrations >= 2);
     }
 
     @Test

@@ -1,24 +1,22 @@
-import axios from "axios";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+import { apiClient } from "./apiClient";
 
 export const getAllTransactions = async () => {
-    const response = await axios.get(`${BASE_URL}/transactions`);
+    const response = await apiClient.get("/transactions");
     return response.data;
 };
 
 export const createTransaction = async (transactionData) => {
-    const response = await axios.post(`${BASE_URL}/transactions`, transactionData);
+    const response = await apiClient.post("/transactions", transactionData);
     return response.data;
 };
 
 export const getDashboardSummary = async () => {
-    const response = await axios.get(`${BASE_URL}/dashboard/summary`);
+    const response = await apiClient.get("/dashboard/summary");
     return response.data;
 };
 
 export const getCategoryBreakdown = async () => {
-    const response = await axios.get(`${BASE_URL}/dashboard/category-breakdown`);
+    const response = await apiClient.get("/dashboard/category-breakdown");
     return response.data;
 };
 
@@ -26,7 +24,7 @@ export const uploadTransactionsCsv = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await axios.post(`${BASE_URL}/transactions/upload`, formData, {
+    const response = await apiClient.post("/transactions/upload", formData, {
         headers: {
             "Content-Type": "multipart/form-data"
         }
@@ -36,15 +34,15 @@ export const uploadTransactionsCsv = async (file) => {
 };
 
 export const getMonthlyTrend = async () => {
-    const response = await axios.get(`${BASE_URL}/dashboard/monthly-trend`);
+    const response = await apiClient.get("/dashboard/monthly-trend");
     return response.data;
 };
 
 export const getInsights = async () => {
-    const response = await axios.get(`${BASE_URL}/dashboard/insights`);
+    const response = await apiClient.get("/dashboard/insights");
     return response.data;
 };
 
 export const deleteTransaction = async (id) => {
-    await axios.delete(`${BASE_URL}/transactions/${id}`);
+    await apiClient.delete(`/transactions/${id}`);
 };

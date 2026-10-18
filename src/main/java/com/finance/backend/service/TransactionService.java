@@ -8,6 +8,7 @@ import com.finance.backend.dto.TransactionRequestDto;
 import com.finance.backend.dto.TransactionResponseDto;
 import com.finance.backend.entity.Transaction;
 import com.finance.backend.entity.TransactionType;
+import com.finance.backend.repository.AppUserRepository;
 import com.finance.backend.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
@@ -26,12 +27,14 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final AppUserRepository userRepository;
 
-    public TransactionService(TransactionRepository transactionRepository) {
+    public TransactionService(TransactionRepository transactionRepository, AppUserRepository userRepository) {
         this.transactionRepository = transactionRepository;
+        this.userRepository = userRepository;
     }
 
-    public TransactionResponseDto saveTransaction(TransactionRequestDto requestDto) {
+    public TransactionResponseDto saveTransaction(TransactionRequestDto requestDto, String email) {
         Transaction transaction = new Transaction();
         transaction.setAmount(requestDto.getAmount());
         transaction.setType(requestDto.getType());
@@ -39,33 +42,37 @@ public class TransactionService {
         transaction.setDescription(requestDto.getDescription());
         transaction.setTransactionDate(requestDto.getTransactionDate());
         transaction.setSource(requestDto.getSource());
+        transaction.setUser(userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found")));
 
         Transaction savedTransaction = transactionRepository.save(transaction);
         return mapToResponseDto(savedTransaction);
     }
 
-    public List<TransactionResponseDto> getAllTransactions() {
-        return transactionRepository.findAll()
+    public List<TransactionResponseDto> getAllTransactions(String email) {
+        return findTransactions(email)
                 .stream()
                 .map(this::mapToResponseDto)
                 .toList();
     }
 
-    public void deleteTransaction(Long id) {
-        if (!transactionRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found");
-        }
-        transactionRepository.deleteById(id);
+    public void deleteTransaction(Long id, String email) {
+        Transaction transaction = transactionRepository.findByIdAndUserEmail(id, email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found"));
+        transactionRepository.delete(transaction);
     }
 
-    public DashboardSummaryDto getDashboardSummary() {
-        BigDecimal totalIncome = transactionRepository.findByType(TransactionType.INCOME)
+    public DashboardSummaryDto getDashboardSummary(String email) {
+        List<Transaction> transactions = findTransactions(email);
+        BigDecimal totalIncome = transactions
                 .stream()
+                .filter(transaction -> transaction.getType() == TransactionType.INCOME)
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalExpense = transactionRepository.findByType(TransactionType.EXPENSE)
+        BigDecimal totalExpense = transactions
                 .stream()
+                .filter(transaction -> transaction.getType() == TransactionType.EXPENSE)
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -74,8 +81,8 @@ public class TransactionService {
         return new DashboardSummaryDto(totalIncome, totalExpense, netBalance);
     }
 
-    public List<CategorySummaryDto> getExpenseByCategory() {
-        return transactionRepository.findAll()
+    public List<CategorySummaryDto> getExpenseByCategory(String email) {
+        return findTransactions(email)
                 .stream()
                 .filter(transaction -> transaction.getType() == TransactionType.EXPENSE)
                 .collect(Collectors.groupingBy(
@@ -91,11 +98,11 @@ public class TransactionService {
                 .toList();
     }
 
-    public List<MonthlyTrendDto> getMonthlyTrend() {
+    public List<MonthlyTrendDto> getMonthlyTrend(String email) {
         Map<String, BigDecimal> incomeMap = new LinkedHashMap<>();
         Map<String, BigDecimal> expenseMap = new LinkedHashMap<>();
 
-        for (Transaction transaction : transactionRepository.findAll()) {
+        for (Transaction transaction : findTransactions(email)) {
             String month = transaction.getTransactionDate().getYear() + "-" +
                     String.format("%02d", transaction.getTransactionDate().getMonthValue());
 
@@ -125,8 +132,8 @@ public class TransactionService {
                 .toList();
     }
 
-    public List<InsightDto> getInsights() {
-        List<Transaction> transactions = transactionRepository.findAll();
+    public List<InsightDto> getInsights(String email) {
+        List<Transaction> transactions = findTransactions(email);
         List<InsightDto> insights = new ArrayList<>();
 
         BigDecimal totalIncome = transactions.stream()
@@ -185,6 +192,10 @@ public class TransactionService {
                 transaction.getTransactionDate(),
                 transaction.getSource()
         );
+    }
+
+    private List<Transaction> findTransactions(String email) {
+        return transactionRepository.findAllByUserEmailOrderByTransactionDateDescIdDesc(email);
     }
 
     private String formatCategory(String category) {

@@ -6,12 +6,12 @@ import com.finance.backend.dto.InsightDto;
 import com.finance.backend.dto.MonthlyTrendDto;
 import com.finance.backend.service.TransactionService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
-@CrossOrigin(origins = "${app.cors.allowed-origin}")
 public class DashboardController {
 
     private final TransactionService transactionService;
@@ -21,22 +21,22 @@ public class DashboardController {
     }
 
     @GetMapping("/summary")
-    public DashboardSummaryDto getDashboardSummary() {
-        return transactionService.getDashboardSummary();
+    public DashboardSummaryDto getDashboardSummary(Authentication authentication) {
+        return transactionService.getDashboardSummary(authentication.getName());
     }
 
     @GetMapping("/category-breakdown")
-    public List<CategorySummaryDto> getExpenseByCategory() {
-        return transactionService.getExpenseByCategory();
+    public List<CategorySummaryDto> getExpenseByCategory(Authentication authentication) {
+        return transactionService.getExpenseByCategory(authentication.getName());
     }
 
     @GetMapping("/monthly-trend")
-    public List<MonthlyTrendDto> getMonthlyTrend() {
-        return transactionService.getMonthlyTrend();
+    public List<MonthlyTrendDto> getMonthlyTrend(Authentication authentication) {
+        return transactionService.getMonthlyTrend(authentication.getName());
     }
 
     @GetMapping("/insights")
-    public List<InsightDto> getInsights() {
-        return transactionService.getInsights();
+    public List<InsightDto> getInsights(Authentication authentication) {
+        return transactionService.getInsights(authentication.getName());
     }
 }

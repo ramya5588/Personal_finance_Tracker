@@ -31,6 +31,10 @@ public class Transaction {
     @Column(nullable = false, length = 50)
     private String source;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "user_id")
+    private AppUser user;
+
     public Transaction() {
     }
 
@@ -98,5 +102,13 @@ public class Transaction {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public AppUser getUser() {
+        return user;
+    }
+
+    public void setUser(AppUser user) {
+        this.user = user;
     }
 }

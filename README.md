@@ -2,11 +2,14 @@
 
 [![CI](https://github.com/ramya5588/Personal_finance_Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/ramya5588/Personal_finance_Tracker/actions/workflows/ci.yml)
 
-A full-stack finance dashboard for recording transactions, importing CSV data, and exploring spending summaries and trends.
+A secure full-stack finance dashboard for recording transactions, importing CSV data, and exploring spending summaries and trends.
 
 ## Features
 
 - Create, list, and delete income and expense transactions
+- Register and sign in with BCrypt-hashed credentials
+- Protect the API with signed, expiring JWT bearer tokens
+- Isolate every transaction and dashboard calculation by user
 - Import transactions from CSV
 - View income, expense, and net-balance summaries
 - Explore expense totals by category
@@ -16,7 +19,7 @@ A full-stack finance dashboard for recording transactions, importing CSV data, a
 
 ## Tech stack
 
-- **Backend:** Java 21, Spring Boot, Spring Data JPA, Hibernate, Flyway
+- **Backend:** Java 21, Spring Boot, Spring Security, Spring Data JPA, Hibernate, Flyway
 - **Frontend:** React, Vite, Axios, Recharts
 - **Database:** PostgreSQL
 - **Testing:** JUnit 5, Mockito, Testcontainers
@@ -26,7 +29,8 @@ A full-stack finance dashboard for recording transactions, importing CSV data, a
 
 ```mermaid
 flowchart LR
-    UI[React dashboard] -->|REST/JSON| API[Spring Boot controllers]
+    UI[React dashboard] -->|JWT + REST/JSON| SECURITY[Spring Security]
+    SECURITY --> API[Spring Boot controllers]
     API --> SERVICE[Service layer]
     SERVICE --> REPOSITORY[Spring Data JPA]
     REPOSITORY --> DB[(PostgreSQL)]
@@ -66,7 +70,9 @@ docker compose up --build
 
 Open `http://localhost:5173`. The backend remains available directly at `http://localhost:8080`.
 
-To choose a different local database password, copy `.env.example` to `.env` and update `POSTGRES_PASSWORD` before starting the stack. The default Compose password is for local development only.
+To choose different local secrets, copy `.env.example` to `.env` and update `POSTGRES_PASSWORD` and `JWT_SECRET` before starting the stack. The Compose defaults are for local development only.
+
+Create an account in the browser after the stack starts. Transactions created before authentication was added remain in the database but are unassigned and intentionally hidden to prevent cross-user data exposure.
 
 Stop the services:
 
@@ -144,6 +150,9 @@ The dashboard runs at `http://localhost:5173`. Vite proxies `/api` requests to t
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
+| `POST` | `/api/auth/register` | Create an account and receive a JWT |
+| `POST` | `/api/auth/login` | Authenticate and receive a JWT |
+| `GET` | `/api/auth/me` | Read the authenticated user profile |
 | `POST` | `/api/transactions` | Create a transaction |
 | `GET` | `/api/transactions` | List transactions |
 | `DELETE` | `/api/transactions/{id}` | Delete a transaction |
@@ -152,6 +161,8 @@ The dashboard runs at `http://localhost:5173`. Vite proxies `/api` requests to t
 | `GET` | `/api/dashboard/category-breakdown` | Get expense totals by category |
 | `GET` | `/api/dashboard/monthly-trend` | Get monthly income and expense totals |
 | `GET` | `/api/dashboard/insights` | Get rules-based spending observations |
+
+Only registration and login are public. All other endpoints require an `Authorization: Bearer <token>` header, and transaction results are restricted to the token subject.
 
 Example transaction:
 
@@ -194,6 +205,5 @@ npm run build
 
 ## Roadmap
 
-- Add authentication and user-specific data
 - Add filtering, pagination, and recurring transactions
 - Deploy a live demonstration environment

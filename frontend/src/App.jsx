@@ -13,6 +13,8 @@ import CategoryPieChart from "./components/CategoryPieChart";
 import CsvUpload from "./components/CsvUpload";
 import MonthlyTrendChart from "./components/MonthlyTrendChart";
 import InsightsPanel from "./components/InsightsPanel";
+import AuthPage from "./components/AuthPage";
+import { clearSession, getStoredSession, saveSession } from "./api/apiClient";
 import "./App.css";
 
 const EMPTY_SUMMARY = { totalIncome: 0, totalExpense: 0, netBalance: 0 };
@@ -45,6 +47,7 @@ const fetchDashboardData = async () => {
 };
 
 function App() {
+    const [user, setUser] = useState(getStoredSession);
     const [summary, setSummary] = useState(EMPTY_SUMMARY);
 
     const [transactions, setTransactions] = useState([]);
@@ -62,6 +65,10 @@ function App() {
     };
 
     useEffect(() => {
+        if (!user) {
+            return undefined;
+        }
+
         let cancelled = false;
 
         fetchDashboardData().then((data) => {
@@ -77,11 +84,47 @@ function App() {
         return () => {
             cancelled = true;
         };
+    }, [user]);
+
+    useEffect(() => {
+        const handleExpiredSession = () => setUser(null);
+        window.addEventListener("finance-auth-expired", handleExpiredSession);
+        return () => window.removeEventListener("finance-auth-expired", handleExpiredSession);
     }, []);
+
+    const handleAuthenticated = (response) => {
+        setUser(saveSession(response));
+    };
+
+    const handleLogout = () => {
+        clearSession();
+        setUser(null);
+        setSummary(EMPTY_SUMMARY);
+        setTransactions([]);
+        setCategoryData([]);
+        setMonthlyTrendData([]);
+        setInsights([]);
+    };
+
+    if (!user) {
+        return <AuthPage onAuthenticated={handleAuthenticated} />;
+    }
 
     return (
         <div className="app-container">
-            <h1 className="app-title">Personal Finance Tracker</h1>
+            <header className="app-header">
+                <div>
+                    <p className="app-eyebrow">Personal Finance Tracker</p>
+                    <h1 className="app-title">Your financial dashboard</h1>
+                </div>
+                <div className="user-menu">
+                    <div>
+                        <strong>{user.name}</strong>
+                        <span>{user.email}</span>
+                    </div>
+                    <button className="logout-button" type="button" onClick={handleLogout}>Log out</button>
+                </div>
+            </header>
 
             <DashboardSummary summary={summary} />
 

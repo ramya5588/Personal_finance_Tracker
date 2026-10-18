@@ -12,22 +12,23 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private TransactionType type;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String category;
 
+    @Column(length = 500)
     private String description;
 
     @Column(nullable = false)
     private LocalDate transactionDate;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String source;
 
     public Transaction() {

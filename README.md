@@ -1,5 +1,7 @@
 # Personal Finance Tracker
 
+[![CI](https://github.com/ramya5588/Personal_finance_Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/ramya5588/Personal_finance_Tracker/actions/workflows/ci.yml)
+
 A full-stack finance dashboard for recording transactions, importing CSV data, and exploring spending summaries and trends.
 
 ## Features
@@ -14,11 +16,11 @@ A full-stack finance dashboard for recording transactions, importing CSV data, a
 
 ## Tech stack
 
-- **Backend:** Java 21, Spring Boot, Spring Data JPA, Hibernate
+- **Backend:** Java 21, Spring Boot, Spring Data JPA, Hibernate, Flyway
 - **Frontend:** React, Vite, Axios, Recharts
 - **Database:** PostgreSQL
-- **Testing:** JUnit 5, Mockito
-- **Build tools:** Gradle, npm
+- **Testing:** JUnit 5, Mockito, Testcontainers
+- **Delivery:** Docker Compose, GitHub Actions
 
 ## Architecture
 
@@ -28,6 +30,7 @@ flowchart LR
     API --> SERVICE[Service layer]
     SERVICE --> REPOSITORY[Spring Data JPA]
     REPOSITORY --> DB[(PostgreSQL)]
+    FLYWAY[Flyway migrations] --> DB
 ```
 
 ## Project structure
@@ -41,22 +44,49 @@ flowchart LR
 │   ├── repository
 │   └── service
 ├── src/main/resources/application.properties
+├── src/main/resources/db/migration
 ├── src/test/java
 ├── frontend
 │   └── src
 │       ├── api
 │       └── components
 ├── build.gradle
+├── compose.yaml
+├── Dockerfile
 └── .env.example
 ```
 
-## Local setup
+## Quick start with Docker
+
+Docker Compose starts PostgreSQL, the Spring Boot API, and the production-built React frontend:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:5173`. The backend remains available directly at `http://localhost:8080`.
+
+To choose a different local database password, copy `.env.example` to `.env` and update `POSTGRES_PASSWORD` before starting the stack. The default Compose password is for local development only.
+
+Stop the services:
+
+```bash
+docker compose down
+```
+
+Remove the local database volume and start with a fresh schema:
+
+```bash
+docker compose down --volumes
+```
+
+## Manual local setup
 
 ### Prerequisites
 
 - Java 21
 - PostgreSQL
-- Node.js 20 or newer
+- Node.js 24
 
 ### 1. Configure PostgreSQL
 
@@ -80,7 +110,9 @@ Bash:
 export DB_PASSWORD="your-local-postgres-password"
 ```
 
-Other supported variables are documented in [`.env.example`](.env.example). Spring Boot reads the variables from the process environment; it does not automatically load the `.env` file.
+Other supported variables are documented in [`.env.example`](.env.example). Spring Boot reads variables from the process environment; it does not automatically load the `.env` file.
+
+Flyway applies the versioned migrations in `src/main/resources/db/migration` when the application starts. Hibernate validates the resulting schema and does not create or modify tables. If you previously ran a Hibernate-managed version of this project, recreate the local database before starting this version.
 
 ### 2. Run the backend
 
@@ -144,11 +176,13 @@ amount,type,category,description,transactionDate,source
 
 ## Verification
 
-Run backend unit tests:
+Run backend unit and PostgreSQL integration tests:
 
 ```powershell
 .\gradlew.bat test
 ```
+
+The integration tests use Testcontainers and run automatically when Docker is available. They are skipped on machines without a running Docker engine; GitHub Actions runs them with Docker enabled.
 
 Run frontend checks:
 
@@ -160,9 +194,6 @@ npm run build
 
 ## Roadmap
 
-- Add database migrations with Flyway
-- Add integration tests with Testcontainers
 - Add authentication and user-specific data
 - Add filtering, pagination, and recurring transactions
-- Add Docker Compose and CI/CD
 - Deploy a live demonstration environment
